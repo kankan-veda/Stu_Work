@@ -230,4 +230,5 @@ app = create_app()
 
 if __name__ == "__main__":
     with app.app_context(): init_demo_data()
-    app.run(debug=True)
+    # 监听局域网网卡，便于同一 Wi-Fi 下的设备访问演示系统。
+    app.run(host="0.0.0.0", port=5000, debug=True)

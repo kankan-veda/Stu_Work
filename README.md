@@ -12,6 +12,24 @@ python app.py
 
 浏览器打开 <http://127.0.0.1:5000>。
 
+## 局域网访问
+
+启动后，在运行电脑上执行 `ipconfig`，找到当前 Wi-Fi 或以太网网卡的 IPv4 地址，例如 `192.168.1.20`。
+
+同一局域网的其他设备访问：
+
+```text
+http://192.168.1.20:5000
+```
+
+如果 Windows 防火墙弹出提示，请允许 Python 通过专用网络访问。也可以使用管理员 PowerShell 添加端口规则：
+
+```powershell
+New-NetFirewallRule -DisplayName "Flask Employment Demo 5000" -Direction Inbound -Protocol TCP -LocalPort 5000 -Action Allow -Profile Private
+```
+
+仅在可信的家庭或校园局域网中使用此演示配置，不要直接暴露到公网。
+
 ## 演示账号
 
 | 角色 | 账号 | 密码 |
