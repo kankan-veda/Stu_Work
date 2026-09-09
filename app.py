@@ -89,6 +89,41 @@ def create_app(test_config=None):
                 return redirect(url_for("student_dashboard" if user.role == "student" else "staff_records"))
         return render_template("login.html")
 
+    @app.route("/register", methods=("GET", "POST"))
+    def register():
+        if request.method == "POST":
+            username = request.form.get("username", "").strip()
+            password = request.form.get("password", "")
+            confirm_password = request.form.get("confirm_password", "")
+            student_no = request.form.get("student_no", "").strip()
+            name = request.form.get("name", "").strip()
+            major = request.form.get("major", "").strip()
+            class_name = request.form.get("class_name", "").strip()
+            phone = request.form.get("phone", "").strip()
+            if not all((username, password, confirm_password, student_no, name, major, class_name, phone)):
+                flash("请填写完整注册信息", "error")
+                return render_template("register.html")
+            if len(password) < 6:
+                flash("密码至少需要 6 位", "error")
+                return render_template("register.html")
+            if password != confirm_password:
+                flash("两次输入的密码不一致", "error")
+                return render_template("register.html")
+            if User.query.filter_by(username=username).first():
+                flash("该账号已存在", "error")
+                return render_template("register.html")
+            if Graduate.query.filter_by(student_no=student_no).first():
+                flash("该学号已注册", "error")
+                return render_template("register.html")
+            graduate = Graduate(student_no=student_no, name=name, major=major, class_name=class_name, phone=phone)
+            user = User(username=username, role="student", graduate=graduate)
+            user.set_password(password)
+            db.session.add(user)
+            db.session.commit()
+            flash("注册成功，请登录", "success")
+            return redirect(url_for("login"))
+        return render_template("register.html")
+
     @app.get("/logout")
     def logout():
         session.clear(); return redirect(url_for("login"))

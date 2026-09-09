@@ -15,6 +15,21 @@ def test_student_login_redirects_to_student_dashboard(client):
     assert response.headers["Location"].endswith("/student")
 
 
+def test_new_student_can_register_and_login(client, app):
+    response = client.post("/register", data={
+        "username": "newstudent", "password": "abc12345", "confirm_password": "abc12345",
+        "student_no": "2026998", "name": "王五", "major": "软件工程",
+        "class_name": "软工2201班", "phone": "13900000000",
+    }, follow_redirects=True)
+    assert "注册成功" in response.get_data(as_text=True)
+    with app.app_context():
+        from app import User
+        assert User.query.filter_by(username="newstudent").one().graduate.name == "王五"
+    login = client.post("/login", data={"username": "newstudent", "password": "abc12345"})
+    assert login.status_code == 302
+    assert login.headers["Location"].endswith("/student")
+
+
 def test_student_cannot_open_staff_records(logged_in_student):
     response = logged_in_student.get("/staff/records", follow_redirects=True)
     assert "无权访问" in response.get_data(as_text=True)
