@@ -1,1 +1,27 @@
-<!doctype html><html lang="zh-CN"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>{% block title %}毕业生就业信息管理系统{% endblock %}</title><link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}"></head><body><nav><a href="{{ url_for('index') }}">就业信息管理系统</a>{% if current_user %}<span>{{ current_user.username }}（{{ '学生' if current_user.role == 'student' else '就业办' }}）</span><a href="{{ url_for('logout') }}">退出</a>{% endif %}</nav><main>{% with messages = get_flashed_messages(with_categories=true) %}{% for category,message in messages %}<div class="alert {{ category }}">{{ message }}</div>{% endfor %}{% endwith %}{% block content %}{% endblock %}</main></body></html>
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{% block title %}就业去向登记系统{% endblock %}</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+  <header class="site-header">
+    <nav class="site-nav" aria-label="主导航">
+      <a class="brand" href="{{ url_for('index') }}"><span class="brand-mark">去</span><span class="brand-copy">就业去向登记<small>毕业生信息管理平台</small></span></a>
+      {% if current_user %}
+        <div class="nav-links">
+          {% if current_user.role == 'student' %}<a href="{{ url_for('student_dashboard') }}">个人中心</a><a href="{{ url_for('employment_edit' if current_user.graduate.employment else 'employment_new') }}">就业信息</a>
+          {% else %}<a href="{{ url_for('staff_records') }}">就业审核</a><a href="{{ url_for('statistics') }}">数据统计</a>{% endif %}
+        </div>
+        <div class="user-menu"><span class="user-chip">{{ current_user.username }}</span><a class="logout" href="{{ url_for('logout') }}">退出</a></div>
+      {% endif %}
+    </nav>
+  </header>
+  <main class="app-shell {% block main_class %}{% endblock %}">
+    {% with messages = get_flashed_messages(with_categories=true) %}{% if messages %}<div class="flash-stack">{% for category, message in messages %}<div class="alert {{ category }}">{{ message }}</div>{% endfor %}</div>{% endif %}{% endwith %}
+    {% block content %}{% endblock %}
+  </main>
+</body>
+</html>

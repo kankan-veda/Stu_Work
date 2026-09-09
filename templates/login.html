@@ -1,1 +1,6 @@
-{% extends 'base.html' %}{% block title %}登录{% endblock %}{% block content %}<section class="card narrow"><h1>系统登录</h1><form method="post"><label>账号<input name="username" required autofocus></label><label>密码<input name="password" type="password" required></label><button>登录</button> <a href="{{ url_for('register') }}">注册学生账号</a></form><p class="hint">演示账号：student001 / 123456　|　admin / admin123</p></section>{% endblock %}
+{% extends 'base.html' %}
+{% block title %}登录 - 就业去向登记系统{% endblock %}
+{% block main_class %}auth-page{% endblock %}
+{% block content %}
+<section class="card auth-card narrow"><div class="auth-banner"><p class="eyebrow">GRADUATE EMPLOYMENT PORTAL</p><h1>就业去向登记系统</h1><p>毕业生信息管理平台</p></div><div class="auth-body"><h2>欢迎登录</h2><form method="post"><label>账号<input name="username" autocomplete="username" required autofocus></label><label>密码<input name="password" type="password" autocomplete="current-password" required></label><div class="actions"><button type="submit">登录系统</button></div></form><p class="auth-footer">还没有学生账号？ <a href="{{ url_for('register') }}">立即注册</a></p><p class="auth-footer">演示账号：student001 / 123456　·　admin / admin123</p></div></section>
+{% endblock %}

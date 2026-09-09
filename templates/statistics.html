@@ -1,1 +1,7 @@
-{% extends 'base.html' %}{% block content %}<h1>就业统计</h1><div class="stats"><div><b>{{ counts.total }}</b><span>记录总数</span></div><div><b>{{ counts.pending }}</b><span>待审核</span></div><div><b>{{ counts.approved }}</b><span>审核通过</span></div><div><b>{{ counts.rejected }}</b><span>已驳回</span></div></div><section class="card"><h2>已通过记录的单位性质</h2><table><tr><th>单位性质</th><th>数量</th></tr>{% for kind,count in employer_type_stats %}<tr><td>{{ kind }}</td><td>{{ count }}</td></tr>{% else %}<tr><td colspan="2">暂无已通过记录</td></tr>{% endfor %}</table></section>{% endblock %}
+{% extends 'base.html' %}
+{% block title %}数据统计 - 就业去向登记系统{% endblock %}
+{% block content %}
+<div class="page-heading"><div><h1>就业数据统计</h1><p>掌握当前就业信息审核进度。</p></div><a class="button secondary" href="{{ url_for('staff_records') }}">返回审核列表</a></div>
+<div class="stats"><div class="stat-card"><b>{{ counts.total }}</b><span>记录总数</span></div><div class="stat-card"><b>{{ counts.pending }}</b><span>待审核</span></div><div class="stat-card"><b>{{ counts.approved }}</b><span>审核通过</span></div><div class="stat-card"><b>{{ counts.rejected }}</b><span>已驳回</span></div></div>
+<section class="card"><div class="section-heading"><div><h2>已通过记录的单位性质</h2><p>按单位性质统计已审核通过的就业记录。</p></div></div><div class="table-wrap"><table><thead><tr><th>单位性质</th><th>数量</th></tr></thead><tbody>{% for kind, count in employer_type_stats %}<tr><td>{{ kind }}</td><td>{{ count }}</td></tr>{% else %}<tr><td class="empty-state" colspan="2">暂无已通过记录</td></tr>{% endfor %}</tbody></table></div></section>
+{% endblock %}
