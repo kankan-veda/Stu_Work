@@ -3,7 +3,7 @@ from functools import wraps
 from pathlib import Path
 
 import click
-from flask import Flask, abort, flash, g, redirect, render_template, request, session, url_for
+from flask import Flask, abort, flash, g, redirect, render_template, request, send_file, session, url_for
 from flask_sqlalchemy import SQLAlchemy
 from sqlalchemy import func, or_
 from werkzeug.security import check_password_hash, generate_password_hash
@@ -48,6 +48,10 @@ class Employment(db.Model):
     status = db.Column(db.String(20), nullable=False, default="pending")
     review_comment = db.Column(db.Text)
     reviewed_at = db.Column(db.DateTime)
+    agreement_signed = db.Column(db.Boolean, nullable=False, default=False)
+    agreement_filename = db.Column(db.String(255))
+    agreement_mimetype = db.Column(db.String(100))
+    agreement_data = db.Column(db.LargeBinary)
 
 
 def create_app(test_config=None):
@@ -171,6 +175,23 @@ def create_app(test_config=None):
         if any(not request.form.get(name, "").strip() for name in required):
             flash("请填写所有必填项", "error")
             return render_template("employment_form.html", employment=employment, title=_title)
+        # Accept the checkbox value emitted by the form, plus the older
+        # textual value used by clients that submitted the field directly.
+        if request.form.get("agreement_signed") not in {"1", "yes", "on"}:
+            flash("请确认已签署就业协议", "error")
+            return render_template("employment_form.html", employment=employment, title=_title)
+        agreement = request.files.get("agreement_file")
+        if agreement and agreement.filename:
+            if not agreement.filename.lower().endswith(".pdf") or agreement.mimetype != "application/pdf":
+                flash("就业协议书只支持 PDF 文件", "error")
+                return render_template("employment_form.html", employment=employment, title=_title)
+            employment.agreement_filename = agreement.filename
+            employment.agreement_mimetype = "application/pdf"
+            employment.agreement_data = agreement.read()
+        elif not employment.agreement_data:
+            flash("请上传就业协议书 PDF 文件", "error")
+            return render_template("employment_form.html", employment=employment, title=_title)
+        employment.agreement_signed = True
         for field in ("employment_date", "employer", "employer_type", "position", "archive_destination", "remark"):
             setattr(employment, field, request.form.get(field, "").strip())
         employment.status, employment.review_comment, employment.reviewed_at = "pending", None, None
@@ -201,6 +222,21 @@ def create_app(test_config=None):
             db.session.commit(); flash("审核完成", "success"); return redirect(url_for("staff_records"))
         return render_template("review.html", employment=employment)
 
+    @app.get("/employment/<int:employment_id>/agreement")
+    @login_required
+    def download_agreement(employment_id):
+        employment = db.session.get(Employment, employment_id)
+        if not employment or not employment.agreement_data:
+            abort(404)
+        if g.current_user.role == "student" and employment.graduate_id != g.current_user.graduate_id:
+            abort(403)
+        return send_file(
+            __import__("io").BytesIO(employment.agreement_data),
+            mimetype="application/pdf",
+            as_attachment=False,
+            download_name=employment.agreement_filename or "就业协议书.pdf",
+        )
+
     @app.get("/staff/statistics")
     @role_required("staff")
     def statistics():
@@ -215,7 +251,24 @@ def create_app(test_config=None):
 
     with app.app_context():
         db.create_all()
+        _ensure_agreement_columns()
     return app
+
+
+def _ensure_agreement_columns():
+    """Add agreement columns when upgrading an existing demo SQLite database."""
+    inspector = db.inspect(db.engine)
+    columns = {column["name"] for column in inspector.get_columns("employment")}
+    additions = {
+        "agreement_signed": "BOOLEAN NOT NULL DEFAULT 0",
+        "agreement_filename": "VARCHAR(255)",
+        "agreement_mimetype": "VARCHAR(100)",
+        "agreement_data": "BLOB",
+    }
+    for name, definition in additions.items():
+        if name not in columns:
+            db.session.execute(db.text(f"ALTER TABLE employment ADD COLUMN {name} {definition}"))
+    db.session.commit()
 
 
 def init_demo_data():

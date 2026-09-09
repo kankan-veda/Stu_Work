@@ -1,4 +1,5 @@
 import pytest
+from io import BytesIO
 from pathlib import Path
 import uuid
 
@@ -49,7 +50,9 @@ def pending_employment(app, logged_in_student):
         "employment_date": "2026-07-01", "employer": "示例科技有限公司",
         "employer_type": "民营企业", "position": "软件工程师",
         "archive_destination": "杭州市人才服务中心", "remark": "",
-    })
+        "agreement_signed": "1",
+        "agreement_file": (BytesIO(b"%PDF-1.7\ndemo agreement"), "demo-agreement.pdf"),
+    }, content_type="multipart/form-data")
     with app.app_context():
         from app import Employment
         return db.session.get(Employment, 1)
